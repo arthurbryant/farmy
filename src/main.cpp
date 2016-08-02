@@ -55,37 +55,12 @@ void loop() {
   Serial.print("connecting to ");
   Serial.println(host);
 
-  collectAndSendData(host, device_id, input_pins, api_key, client);
-
-  String url = "/api/v0/user_devices/bx7eWzca/triggered_actions/";
-
-  if (!client.connect(host, 80)) {
-      Serial.println("connection failed");
-      return;
-  }
-  // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n");
-  client.print("Content-Type: application/json\r\n");
-  client.print(String("X-Farmy-Api-Key: ") + api_key + "\r\n");
-  client.print("Connection: close\r\n\r\n");
-  client.print("\r\n\r\n");
-
-  int timeout = millis() + 5000;
-  while (client.available() == 0) {
-    if (timeout - millis() < 0) {
-      Serial.println(">>> Client Timeout !");
-      client.stop();
-      return;
-    }
+  if(!client.connect(host, 80)) {
+    Serial.println("connection failed");
+    return;
   }
 
-  // Read all the lines of the reply from server and print them to Serial
-  while(client.available()) {
-    String line = client.readStringUntil('\r');
-    Serial.print(line);
-    Serial.println("---------------");
-  }
-
-  Serial.println();
-  Serial.println("closing connection");
+  Farmy farmy;
+  farmy.collectAndSendData(host, device_id, input_pins, api_key, client);
+  farmy.getActionList(host, device_id, api_key, client);
 }
