@@ -1,3 +1,8 @@
+extern "C" {
+  #include "spi.h"
+  #include "spi_register.h"
+}
+
 #include "Farmy.h"
 
 void Farmy::send( const char* device_id, int input_pins[], String api_key, WiFiClient client)
@@ -53,7 +58,7 @@ String Farmy::collectData(int input_pins[])
   int i = 0;
   while(input_pins[i]) {
     object["pin"] = input_pins[i];
-    object["value"] = analogRead(input_pins[i]);
+    object["value"] = check(input_pins[i]);
     array.add(object);
     ++i;
   }
@@ -86,4 +91,16 @@ void Farmy::sendData(const char* device_id, String api_key, WiFiClient client, S
 
   client.print(data);
   client.stop();
+}
+
+uint32 Farmy::check(int channel) {
+  uint8 cmd = (0b11 << 3) | channel;
+
+  const uint32 COMMAND_LENGTH = 5;
+  const uint32 RESPONSE_LENGTH = 12;
+
+  uint32 retval = spi_transaction(HSPI, 0, 0, 0, 0, COMMAND_LENGTH, cmd, RESPONSE_LENGTH, 0);
+
+  retval = retval & 0x3FF; // mask to 10-bit value
+  return retval;
 }

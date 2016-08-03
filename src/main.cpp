@@ -4,13 +4,14 @@
 #include "Arduino.h"
 #include "Farmy.h"
 
-#define FLASH_DELAY 1000
-#define LONG_FLASH_DELAY 15000
-
 extern "C" {
   #include "spi.h"
   #include "spi_register.h"
 }
+
+
+#define FLASH_DELAY 1000
+#define LONG_FLASH_DELAY 15000
 
 /* setup Wifi */
 const char* ssid     = "Fenney";
@@ -67,6 +68,8 @@ void executeActions(char* json)
 void setup() {
   Serial.begin(115200);
   delay(10);
+
+  spi_init(HSPI);
 
   // We start by connecting to a WiFi network
   Serial.println();

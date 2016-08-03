@@ -42,6 +42,7 @@ class Farmy
   private:
     String collectData(int input_pins[]);
     void sendData(const char* device_id, String api_key, WiFiClient client, String data);
+    uint32 check(int channel);
 };
 
 #endif
