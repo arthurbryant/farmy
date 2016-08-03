@@ -1,18 +1,18 @@
 #include "Farmy.h"
 
 #define JSON_BUFFER 256
-#define FLASH_TIME 1000
-#define LONG_FLASH_TIME 15000
+#define FLASH_DELAY 1000
+#define LONG_FLASH_DELAY 15000
 
-void Farmy::send(const char* host, const char* device_id, int input_pins[], String api_key, WiFiClient client)
+void Farmy::send( const char* device_id, int input_pins[], String api_key, WiFiClient client)
 {
   String data = collectData(input_pins);
-  sendData(host, device_id, api_key, client, data);
+  sendData(device_id, api_key, client, data);
 }
 
-void Farmy::execute(const char* host, const char* device_id, String api_key, WiFiClient client)
+void Farmy::execute(const char* device_id, String api_key, WiFiClient client)
 {
-  char* json = getActionList(host, device_id, api_key, client);
+  char* json = getActionList(device_id, api_key, client);
   executeActions(json);
 }
 
@@ -40,7 +40,7 @@ String Farmy::collectData(int input_pins[])
   return data;
 }
 
-void Farmy::sendData(const char* host, const char* device_id, String api_key, WiFiClient client, String data)
+void Farmy::sendData(const char* device_id, String api_key, WiFiClient client, String data)
 {
   // Todo: use retry to connect internet.
   Serial.println("Connected to ThingSpeak.");
@@ -60,7 +60,7 @@ void Farmy::sendData(const char* host, const char* device_id, String api_key, Wi
   client.stop();
 }
 
-char* Farmy::getActionList(const char* host, const char* device_id, String api_key, WiFiClient client) {
+char* Farmy::getActionList(const char* device_id, String api_key, WiFiClient client) {
   String url = String("/api/v0/user_devices/") + device_id + "/triggered_actions/";
 
   // This will send the request to the server
@@ -125,13 +125,13 @@ void Farmy::executeActions(char* json)
     else if(action_type == "flash") {
         Serial.println("Start to flash");
         digitalWrite(pin, LOW);
-        delay(FLASH_TIME);
+        delay(FLASH_DELAY);
         digitalWrite(pin, HIGH);
     }
     else if(action_type == "flash_long") {
         Serial.println("Start to long flash");
         digitalWrite(pin, LOW);
-        delay(LONG_FLASH_TIME);
+        delay(LONG_FLASH_DELAY);
         digitalWrite(pin, HIGH);
     }
   }

@@ -13,7 +13,6 @@ const char* ssid     = "Fenney";
 const char* password = "1357924680";
 
 /* setup host */
-const char* host = "farmy.net";
 const char* device_id = "bx7eWzca";
 
 /* setup api key */
@@ -61,8 +60,7 @@ void loop() {
   }
 
   Farmy farmy;
-  // Todo: remove host to lib
-  farmy.execute(host, device_id, api_key, client);
+  farmy.execute(device_id, api_key, client);
   delay(2000);
-  farmy.send(host, device_id, input_pins, api_key, client);
+  farmy.send(device_id, input_pins, api_key, client);
 }
