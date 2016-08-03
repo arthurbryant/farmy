@@ -62,6 +62,7 @@ void loop() {
 
   Farmy farmy;
   // Todo: remove host to lib
-  // farmy.send(host, device_id, input_pins, api_key, client);
   farmy.execute(host, device_id, api_key, client);
+  delay(2000);
+  farmy.send(host, device_id, input_pins, api_key, client);
 }

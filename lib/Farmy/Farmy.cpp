@@ -1,6 +1,8 @@
 #include "Farmy.h"
 
 #define JSON_BUFFER 256
+#define FLASH_TIME 1000
+#define LONG_FLASH_TIME 15000
 
 void Farmy::send(const char* host, const char* device_id, int input_pins[], String api_key, WiFiClient client)
 {
@@ -30,7 +32,7 @@ String Farmy::collectData(int input_pins[])
 
   char data[JSON_BUFFER];
   array.printTo(data, sizeof(data));
-  Serial.println("json data:  ----------------------");
+  Serial.println("collected json data:  ----------------------");
   Serial.println(data);
 
   String str = data;
@@ -88,7 +90,7 @@ char* Farmy::getActionList(const char* host, const char* device_id, String api_k
     if (begin) json[index++] = c;
     if (c == ']') break;
   }
-  Serial.println("Json data: ");
+  Serial.println("\n\nGot json data ---------------");
   Serial.println(json);
 
   Serial.println();
@@ -104,21 +106,33 @@ void Farmy::executeActions(char* json)
   for(JsonArray::iterator it=array.begin(); it!=array.end(); ++it)
   {
     JsonObject& object = *it;
-    String pin = object["pin"];
+    String pin_s = object["pin"];
     String action_type = object["action_type"];
-    Serial.println(pin);
+    Serial.println(pin_s);
     Serial.println(action_type);
+
+    int pin = atof(pin_s.c_str());
+    pinMode(pin, OUTPUT);
+
     if(action_type == "turn_on") {
         Serial.println("Start to turn on");
+        digitalWrite(pin, LOW);
     }
     else if(action_type == "turn_off") {
         Serial.println("Start to turn off");
+        digitalWrite(pin, HIGH);
     }
     else if(action_type == "flash") {
         Serial.println("Start to flash");
+        digitalWrite(pin, LOW);
+        delay(FLASH_TIME);
+        digitalWrite(pin, HIGH);
     }
-    else if(action_type == "long_flash") {
+    else if(action_type == "flash_long") {
         Serial.println("Start to long flash");
+        digitalWrite(pin, LOW);
+        delay(LONG_FLASH_TIME);
+        digitalWrite(pin, HIGH);
     }
   }
 }
