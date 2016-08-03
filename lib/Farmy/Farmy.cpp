@@ -7,11 +7,23 @@ extern "C" {
 
 void Farmy::send( const char* device_id, int input_pins[], String api_key, WiFiClient client)
 {
+  if(!client.connect(host, 80)) {
+    Serial.println("connection failed");
+    return;
+  }
+
   String data = collectData(input_pins);
   sendData(device_id, api_key, client, data);
 }
 
 char* Farmy::get(const char* device_id, String api_key, WiFiClient client) {
+  char* json = (char *)malloc(JSON_BUFFER);
+
+  if(!client.connect(host, 80)) {
+    Serial.println("connection failed");
+    return json;
+  }
+
   String url = String("/api/v0/user_devices/") + device_id + "/triggered_actions/";
 
   // This will send the request to the server
@@ -21,7 +33,6 @@ char* Farmy::get(const char* device_id, String api_key, WiFiClient client) {
   client.print("Connection: close\r\n\r\n");
   client.print("\r\n\r\n");
 
-  char* json = (char *)malloc(JSON_BUFFER);
   int timeout = millis() + 5000;
   while (client.available() == 0) {
     if (timeout - millis() < 0) {
@@ -43,30 +54,34 @@ char* Farmy::get(const char* device_id, String api_key, WiFiClient client) {
   Serial.println("\n\nGot json data ---------------");
   Serial.println(json);
 
-  Serial.println();
-  Serial.println("closing connection");
+  delay(500);
+  if (!client.connected()) {
+      Serial.println();
+      Serial.println("disconnecting.");
+      client.stop();
+  }
 
   return json;
 }
 
 String Farmy::collectData(int input_pins[])
 {
-  StaticJsonBuffer<200> jsonBuffer, buffer;
+  StaticJsonBuffer<200> jsonBuffer;
   JsonArray& array = jsonBuffer.createArray();
-  JsonObject& object = buffer.createObject();
 
   int i = 0;
   while(input_pins[i]) {
+    JsonObject& object = array.createNestedObject();
     object["pin"] = input_pins[i];
     object["value"] = check(input_pins[i]);
-    array.add(object);
     ++i;
   }
 
   char data[JSON_BUFFER];
   array.printTo(data, sizeof(data));
-  Serial.println("collected json data:  ----------------------");
+  Serial.println("\n\nCollected json data:  ----------------------");
   Serial.println(data);
+  Serial.println();
 
   String str = data;
 
@@ -76,7 +91,7 @@ String Farmy::collectData(int input_pins[])
 void Farmy::sendData(const char* device_id, String api_key, WiFiClient client, String data)
 {
   // Todo: use retry to connect internet.
-  Serial.println("Connected to ThingSpeak.");
+  Serial.println("Connected to Famry.");
   Serial.println("Posted:" + data);
 
   // Create HTTP POST Data
@@ -90,7 +105,14 @@ void Farmy::sendData(const char* device_id, String api_key, WiFiClient client, S
   client.print("\n\n");
 
   client.print(data);
-  client.stop();
+  Serial.println("Posted finished -----------");
+
+  delay(500);
+  if (!client.connected()) {
+      Serial.println();
+      Serial.println("disconnecting.");
+      client.stop();
+  }
 }
 
 uint32 Farmy::check(int channel) {

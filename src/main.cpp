@@ -21,7 +21,7 @@ const char* device_id = "bx7eWzca";
 String api_key = "uDLTp8WtTc5wQnFhyKFvFV";
 
 const int pins_size = 8;
-int input_pins[pins_size] = { 17 };
+int input_pins[pins_size] = { 1, 2, 3 };
 int output_pins[pins_size] = {  };
 
 // Todo: try to support other device, such as wire cable network.
@@ -96,13 +96,9 @@ void loop() {
   Serial.print("connecting to ");
   Serial.println(host);
 
-  if(!client.connect(host, 80)) {
-    Serial.println("connection failed");
-    return;
-  }
-
   Farmy farmy;
+  farmy.send(device_id, input_pins, api_key, client);
+  delay(2000);
   char* json = farmy.get(device_id, api_key, client);
   executeActions(json);
-  farmy.send(device_id, input_pins, api_key, client);
 }
