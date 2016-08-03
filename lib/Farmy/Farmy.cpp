@@ -1,14 +1,21 @@
 #include "Farmy.h"
 
+#define JSON_BUFFER 256
+
 void Farmy::send(const char* host, const char* device_id, int input_pins[], String api_key, WiFiClient client)
 {
   String data = collectData(input_pins);
   sendData(host, device_id, api_key, client, data);
 }
 
+void Farmy::execute(const char* host, const char* device_id, String api_key, WiFiClient client)
+{
+  char* json = getActionList(host, device_id, api_key, client);
+  executeActions(json);
+}
+
 String Farmy::collectData(int input_pins[])
 {
-  //char json[] = "[{\"pin\":\"5\",\"value\":233}, {\"pin\":\"4\",\"value\":348}]";
   StaticJsonBuffer<200> jsonBuffer, buffer;
   JsonArray& array = jsonBuffer.createArray();
   JsonObject& object = buffer.createObject();
@@ -21,7 +28,7 @@ String Farmy::collectData(int input_pins[])
     ++i;
   }
 
-  char data[256];
+  char data[JSON_BUFFER];
   array.printTo(data, sizeof(data));
   Serial.println("json data:  ----------------------");
   Serial.println(data);
@@ -51,7 +58,7 @@ void Farmy::sendData(const char* host, const char* device_id, String api_key, Wi
   client.stop();
 }
 
-void Farmy::getActionList(const char* host, const char* device_id, String api_key, WiFiClient client) {
+char* Farmy::getActionList(const char* host, const char* device_id, String api_key, WiFiClient client) {
   String url = String("/api/v0/user_devices/") + device_id + "/triggered_actions/";
 
   // This will send the request to the server
@@ -61,26 +68,57 @@ void Farmy::getActionList(const char* host, const char* device_id, String api_ke
   client.print("Connection: close\r\n\r\n");
   client.print("\r\n\r\n");
 
+  char* json = (char *)malloc(JSON_BUFFER);
   int timeout = millis() + 5000;
   while (client.available() == 0) {
     if (timeout - millis() < 0) {
       Serial.println(">>> Client Timeout !");
       client.stop();
-      return;
+      return json;
     }
   }
 
   // Read all the lines of the reply from server and print them to Serial
+  bool begin = false;
+  int index = 0;
   while(client.available()) {
-    String line = client.readStringUntil('\r');
-    Serial.print(line);
-    Serial.println("---------------");
+    char c = client.read();
+    Serial.print(c);
+    if (c == '[') begin = true;
+    if (begin) json[index++] = c;
+    if (c == ']') break;
   }
+  Serial.println("Json data: ");
+  Serial.println(json);
 
   Serial.println();
   Serial.println("closing connection");
+
+  return json;
 }
 
-void Farmy::execute()
+void Farmy::executeActions(char* json)
 {
+  StaticJsonBuffer<JSON_BUFFER> jsonBuffer;
+  JsonArray& array = jsonBuffer.parseArray(json);
+  for(JsonArray::iterator it=array.begin(); it!=array.end(); ++it)
+  {
+    JsonObject& object = *it;
+    String pin = object["pin"];
+    String action_type = object["action_type"];
+    Serial.println(pin);
+    Serial.println(action_type);
+    if(action_type == "turn_on") {
+        Serial.println("Start to turn on");
+    }
+    else if(action_type == "turn_off") {
+        Serial.println("Start to turn off");
+    }
+    else if(action_type == "flash") {
+        Serial.println("Start to flash");
+    }
+    else if(action_type == "long_flash") {
+        Serial.println("Start to long flash");
+    }
+  }
 }

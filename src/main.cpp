@@ -61,6 +61,7 @@ void loop() {
   }
 
   Farmy farmy;
-  farmy.collectAndSendData(host, device_id, input_pins, api_key, client);
-  farmy.getActionList(host, device_id, api_key, client);
+  // Todo: remove host to lib
+  // farmy.send(host, device_id, input_pins, api_key, client);
+  farmy.execute(host, device_id, api_key, client);
 }

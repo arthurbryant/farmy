@@ -34,11 +34,13 @@ class Farmy
 {
   public:
     void send(const char* host, const char* device_id, int input_pins[], String api_key, WiFiClient client);
-    void getActionList(const char* host, const char* device_id, String api_key, WiFiClient client);
+    void execute(const char* host, const char* device_id, String api_key, WiFiClient client);
 
   private:
     String collectData(int input_pins[]);
     void sendData(const char* host, const char* device_id, String api_key, WiFiClient client, String data);
+    char* getActionList(const char* host, const char* device_id, String api_key, WiFiClient client);
+    void executeActions(char* json);
 };
 
 #endif
